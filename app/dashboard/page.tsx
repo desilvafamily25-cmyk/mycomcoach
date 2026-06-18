@@ -13,19 +13,10 @@ export default async function DashboardPage() {
   const today = new Date().toISOString().split('T')[0];
   const dailyContent = getDailyContent(today);
 
-  const { data: todaySession } = await supabase
-    .from('sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('date', today)
-    .single();
-
-  const { data: recentSessions } = await supabase
-    .from('sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('date', { ascending: false })
-    .limit(7);
+  const [{ data: todaySession }, { data: recentSessions }] = await Promise.all([
+    supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(),
+    supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
+  ]);
 
   const streak = recentSessions?.length ?? 0;
   const avgScore = recentSessions && recentSessions.length > 0
