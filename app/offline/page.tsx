@@ -1,5 +1,3 @@
-'use client';
-
 export default function OfflinePage() {
   return (
     <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4">
@@ -15,12 +13,12 @@ export default function OfflinePage() {
           SpeakClinic needs a connection for AI responses and voice scoring.
           Come back when you&apos;re online — your progress is saved.
         </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-clinic-accent hover:bg-sky-400 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+        <a
+          href="/"
+          className="inline-block bg-clinic-accent hover:bg-sky-400 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
         >
           Try again
-        </button>
+        </a>
       </div>
     </div>
   );
