@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Mic2, Loader2 } from 'lucide-react';
 
@@ -11,7 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -25,8 +23,7 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.refresh();
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
   }
 
