@@ -1,43 +1,36 @@
-import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
-  const isPublic = pathname === '/' || pathname.startsWith('/api/auth') || isAuthPage;
 
-  if (!user && !isPublic) {
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/signup');
+  const isPublic =
+    pathname === '/' ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/offline') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/icons') ||
+    pathname === '/manifest.json' ||
+    isAuthPage;
+
+  // Check for Supabase session cookie — set by the browser client after login
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    .split('//')[1]
+    .split('.')[0];
+  const cookieBase = `sb-${projectRef}-auth-token`;
+  const hasSession =
+    request.cookies.has(cookieBase) ||
+    request.cookies.has(`${cookieBase}.0`);
+
+  if (!hasSession && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  if (user && isAuthPage) {
+  if (hasSession && isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {
