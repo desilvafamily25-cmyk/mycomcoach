@@ -5,6 +5,8 @@ import { getScoreColor, getScoreLabel } from '@/lib/scoring';
 import { clsx } from 'clsx';
 import { BarChart2, TrendingUp, Stethoscope } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ScoresPage() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();

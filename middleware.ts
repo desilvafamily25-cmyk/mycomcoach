@@ -17,12 +17,12 @@ export function middleware(request: NextRequest) {
   const cookieBase = 'sb-okdywevzuljdjxejnetw-auth-token';
   const hasSession = request.cookies.has(cookieBase) || request.cookies.has(`${cookieBase}.0`);
 
+  // Only block unauthenticated users from protected routes.
+  // Do NOT redirect authenticated users from /login → /dashboard here:
+  // if server-side session reading fails, that creates an infinite redirect loop.
+  // The login page handles the "already signed in" redirect client-side instead.
   if (!hasSession && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  if (hasSession && isAuthPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();

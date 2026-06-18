@@ -5,30 +5,40 @@ import AppShell from '@/components/AppShell';
 import { Mic2, Stethoscope, ArrowRight, Target, Flame, Star, Clock } from 'lucide-react';
 import { getDailyContent } from '@/lib/scenarios';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // Use getSession() — reads JWT from cookie locally, no network call
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/login');
-  const user = session.user;
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
+  if (sessionError || !session?.user) {
+    redirect('/login');
+  }
+
+  const user = session!.user;
   const today = new Date().toISOString().split('T')[0];
   const dailyContent = getDailyContent(today);
 
-  // Wrap DB queries so a Supabase error never crashes the whole page
-  const safe = async <T,>(p: PromiseLike<{ data: T | null }>, fallback: T): Promise<{ data: T }> => {
-    try { const r = await p; return { data: r.data ?? fallback }; } catch { return { data: fallback }; }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const safeQuery = async <T,>(query: any, fallback: T): Promise<T> => {
+    try {
+      const result = await query;
+      return (result?.data ?? fallback) as T;
+    } catch {
+      return fallback;
+    }
   };
 
-  const [{ data: todaySession }, { data: recentSessions }] = await Promise.all([
-    safe(supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(), null),
-    safe(supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7), []),
+  const [todaySession, recentSessions] = await Promise.all([
+    safeQuery(supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(), null),
+    safeQuery(supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7), []),
   ]);
 
-  const streak = recentSessions?.length ?? 0;
-  const avgScore = recentSessions && recentSessions.length > 0
-    ? Math.round(recentSessions.reduce((s: number, r: { total_score?: number }) => s + (r.total_score ?? 0), 0) / recentSessions.length)
+  const sessions = (recentSessions as Array<{ date: string; total_score?: number }> | null) ?? [];
+  const streak = sessions.length;
+  const avgScore = sessions.length > 0
+    ? Math.round(sessions.reduce((s: number, r: { total_score?: number }) => s + (r.total_score ?? 0), 0) / sessions.length)
     : 0;
 
   const completedPhases = todaySession
@@ -41,8 +51,10 @@ export default async function DashboardPage() {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
     const dateStr = d.toISOString().split('T')[0];
-    const hasSession = recentSessions?.some((s: { date: string }) => s.date === dateStr);
-    return { day: dayNames[d.getDay()], active: hasSession };
+    return {
+      day: dayNames[d.getDay()],
+      active: sessions.some((s: { date: string }) => s.date === dateStr),
+    };
   });
 
   return (
@@ -120,11 +132,10 @@ export default async function DashboardPage() {
               <ArrowRight size={16} />
             </div>
           </Link>
-
           <Link href="/consultation" className="group bg-gradient-to-br from-clinic-teal to-teal-700 text-white rounded-2xl p-6 hover:shadow-lg hover:shadow-teal-900/20 transition-all">
             <Stethoscope size={28} className="mb-4 text-teal-300" />
             <h3 className="font-black text-lg mb-1">Patient Consultation</h3>
-            <p className="text-white/60 text-sm mb-4">20 AI patient simulations</p>
+            <p className="text-white/60 text-sm mb-4">12 AI patient simulations</p>
             <div className="flex items-center gap-2 text-sm font-semibold text-teal-300 group-hover:gap-3 transition-all">
               Choose a scenario
               <ArrowRight size={16} />
