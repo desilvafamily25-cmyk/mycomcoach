@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { clsx } from 'clsx';
 import { Mic2, LayoutDashboard, Stethoscope, BarChart2, BookOpen, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,12 +16,11 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push('/login');
+    window.location.href = '/login';
   }
 
   return (
