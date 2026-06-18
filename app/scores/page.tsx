@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import { getScoreColor, getScoreLabel } from '@/lib/scoring';
 import { clsx } from 'clsx';
@@ -8,21 +7,14 @@ import { BarChart2, TrendingUp, Stethoscope } from 'lucide-react';
 export default async function ScoresPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const userId = user?.id ?? null;
 
-  const { data: attempts } = await supabase
-    .from('consultation_attempts')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  const { data: sessions } = await supabase
-    .from('sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('date', { ascending: false })
-    .limit(14);
+  const [{ data: attempts }, { data: sessions }] = userId
+    ? await Promise.all([
+        supabase.from('consultation_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+        supabase.from('sessions').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(14),
+      ])
+    : [{ data: [] }, { data: [] }];
 
   type Attempt = { id: string; created_at: string; scenario_id: string; score_overall: number; score_empathy: number; score_clarity: number; score_rapport: number; score_structure: number; score_safety: number; ai_feedback: string };
   type Session = { date: string; total_score: number; phase_1_completed: boolean; phase_2_completed: boolean; phase_3_completed: boolean; phase_4_completed: boolean; phase_5_completed: boolean };

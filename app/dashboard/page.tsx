@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { Mic2, Stethoscope, ArrowRight, Target, Flame, Star, Clock } from 'lucide-react';
@@ -8,15 +7,18 @@ import { getDailyContent } from '@/lib/scenarios';
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
   const today = new Date().toISOString().split('T')[0];
   const dailyContent = getDailyContent(today);
 
-  const [{ data: todaySession }, { data: recentSessions }] = await Promise.all([
-    supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(),
-    supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
-  ]);
+  const userId = user?.id ?? null;
+
+  const [{ data: todaySession }, { data: recentSessions }] = userId
+    ? await Promise.all([
+        supabase.from('sessions').select('*').eq('user_id', userId).eq('date', today).single(),
+        supabase.from('sessions').select('*').eq('user_id', userId).order('date', { ascending: false }).limit(7),
+      ])
+    : [{ data: null }, { data: [] }];
 
   const streak = recentSessions?.length ?? 0;
   const avgScore = recentSessions && recentSessions.length > 0
