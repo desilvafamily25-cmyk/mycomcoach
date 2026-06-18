@@ -13,8 +13,8 @@ export function middleware(request: NextRequest) {
     isAuthPage;
 
   // Read the Supabase session cookie set by the browser client after login
-  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL!.split('//')[1].split('.')[0];
-  const cookieBase = `sb-${projectRef}-auth-token`;
+  // Project ref hardcoded to avoid runtime env-var split errors in Edge Runtime
+  const cookieBase = 'sb-okdywevzuljdjxejnetw-auth-token';
   const hasSession = request.cookies.has(cookieBase) || request.cookies.has(`${cookieBase}.0`);
 
   if (!hasSession && !isPublic) {

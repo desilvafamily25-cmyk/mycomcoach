@@ -7,12 +7,17 @@ import { BarChart2, TrendingUp, Stethoscope } from 'lucide-react';
 
 export default async function ScoresPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/login');
+  const user = session.user;
+
+  const safe = async <T,>(p: PromiseLike<{ data: T | null }>, fallback: T): Promise<{ data: T }> => {
+    try { const r = await p; return { data: r.data ?? fallback }; } catch { return { data: fallback }; }
+  };
 
   const [{ data: attempts }, { data: sessions }] = await Promise.all([
-    supabase.from('consultation_attempts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
-    supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(14),
+    safe(supabase.from('consultation_attempts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20), []),
+    safe(supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(14), []),
   ]);
 
   type Attempt = { id: string; created_at: string; scenario_id: string; score_overall: number; score_empathy: number; score_clarity: number; score_rapport: number; score_structure: number; score_safety: number; ai_feedback: string };

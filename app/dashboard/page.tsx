@@ -7,15 +7,23 @@ import { getDailyContent } from '@/lib/scenarios';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+
+  // Use getSession() — reads JWT from cookie locally, no network call
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/login');
+  const user = session.user;
 
   const today = new Date().toISOString().split('T')[0];
   const dailyContent = getDailyContent(today);
 
+  // Wrap DB queries so a Supabase error never crashes the whole page
+  const safe = async <T,>(p: PromiseLike<{ data: T | null }>, fallback: T): Promise<{ data: T }> => {
+    try { const r = await p; return { data: r.data ?? fallback }; } catch { return { data: fallback }; }
+  };
+
   const [{ data: todaySession }, { data: recentSessions }] = await Promise.all([
-    supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(),
-    supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7),
+    safe(supabase.from('sessions').select('*').eq('user_id', user.id).eq('date', today).single(), null),
+    safe(supabase.from('sessions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(7), []),
   ]);
 
   const streak = recentSessions?.length ?? 0;
