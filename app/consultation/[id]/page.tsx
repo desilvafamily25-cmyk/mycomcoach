@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { notFound } from 'next/navigation';
 import { getScenarioById } from '@/lib/scenarios';
 import AppShell from '@/components/AppShell';
@@ -11,8 +11,8 @@ import type { ChatMessage, FeedbackResult } from '@/types';
 import { ArrowLeft, Loader2, Info, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ConsultationDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ConsultationDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const scenarioOrUndefined = getScenarioById(id);
 
   const [phase, setPhase] = useState<'brief' | 'consultation' | 'feedback'>('brief');
