@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import AppShell from '@/components/AppShell';
 import { getScoreColor, getScoreLabel } from '@/lib/scoring';
+import { formatSydneyDate } from '@/lib/timezone';
 import { clsx } from 'clsx';
 import { BarChart2, TrendingUp, Stethoscope } from 'lucide-react';
 
@@ -103,7 +104,7 @@ export default async function ScoresPage() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="text-sm font-semibold text-gray-800">{a.scenario_id}</p>
-                        <p className="text-xs text-gray-400">{new Date(a.created_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-gray-400">{formatSydneyDate(a.created_at)}</p>
                       </div>
                       <div className="text-right">
                         <p className={clsx('text-xl font-black', getScoreColor(a.score_overall))}>{a.score_overall}</p>

@@ -13,7 +13,7 @@ import { clsx } from 'clsx';
 
 type Phase = 1 | 2 | 3 | 4 | 5;
 
-const today = new Date().toISOString().split('T')[0];
+const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Australia/Sydney' });
 const dailyContent = getDailyContent(today);
 const todayScenario = CONSULTATION_SCENARIOS[parseInt(today.replace(/-/g, '')) % CONSULTATION_SCENARIOS.length];
 

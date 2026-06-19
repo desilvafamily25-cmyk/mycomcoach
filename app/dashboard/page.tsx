@@ -4,6 +4,7 @@ import Link from 'next/link';
 import AppShell from '@/components/AppShell';
 import { Mic2, Stethoscope, ArrowRight, Target, Flame, Star, Clock } from 'lucide-react';
 import { getDailyContent } from '@/lib/scenarios';
+import { getSydneyDateString, getSydneyHour, getDayOfWeek } from '@/lib/timezone';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,8 @@ export default async function DashboardPage() {
   }
 
   const user = session!.user;
-  const today = new Date().toISOString().split('T')[0];
+  const today = getSydneyDateString();
+  const sydneyHour = getSydneyHour();
   const dailyContent = getDailyContent(today);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,12 +49,15 @@ export default async function DashboardPage() {
   const sessionProgress = Math.round((completedPhases / 5) * 100);
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  // Build last 7 days using Sydney date as anchor so the calendar is always correct for Sydney
+  const todayParts = today.split('-').map(Number); // [YYYY, MM, DD]
+  const todayMs = Date.UTC(todayParts[0], todayParts[1] - 1, todayParts[2]);
   const last7 = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const dateStr = d.toISOString().split('T')[0];
+    const ms = todayMs - (6 - i) * 86_400_000;
+    const d = new Date(ms);
+    const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
     return {
-      day: dayNames[d.getDay()],
+      day: dayNames[getDayOfWeek(dateStr)],
       active: sessions.some((s: { date: string }) => s.date === dateStr),
     };
   });
@@ -62,7 +67,7 @@ export default async function DashboardPage() {
       <div className="p-6 max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-black text-navy-900">
-            {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'} 👋
+            {sydneyHour < 12 ? 'Good morning' : sydneyHour < 18 ? 'Good afternoon' : 'Good evening'} 👋
           </h1>
           <p className="text-gray-500 mt-1">
             {today} · Your daily training session {todaySession ? 'is in progress' : 'is ready to begin'}
