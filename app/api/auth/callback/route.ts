@@ -14,13 +14,14 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return request.cookies.getAll();
+          get(name: string) {
+            return request.cookies.get(name)?.value;
           },
-          setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              redirectTo.cookies.set(name, value, options as Parameters<typeof redirectTo.cookies.set>[2])
-            );
+          set(name: string, value: string, options: Record<string, unknown>) {
+            redirectTo.cookies.set(name, value, options as Parameters<typeof redirectTo.cookies.set>[2]);
+          },
+          remove(name: string, options: Record<string, unknown>) {
+            redirectTo.cookies.set(name, '', options as Parameters<typeof redirectTo.cookies.set>[2]);
           },
         },
       }
