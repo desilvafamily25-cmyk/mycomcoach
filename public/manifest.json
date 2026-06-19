@@ -2,7 +2,7 @@
   "name": "SpeakClinic Coach",
   "short_name": "SpeakClinic",
   "description": "Daily AI communication gym for doctors. Practise the conversation before it matters.",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0F172A",

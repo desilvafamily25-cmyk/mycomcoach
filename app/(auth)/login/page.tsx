@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Mic2, Loader2 } from 'lucide-react';
@@ -10,6 +10,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    createClient().auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) window.location.href = '/dashboard';
+    });
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();

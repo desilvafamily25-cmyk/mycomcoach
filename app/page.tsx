@@ -1,5 +1,7 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Mic2, Stethoscope, BarChart2, BookOpen, CheckCircle, ArrowRight } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
 const features = [
   {
@@ -43,7 +45,10 @@ const scenarioCategories = [
   { emoji: '👫', label: 'Relationship' },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.user) redirect('/dashboard');
   return (
     <main className="min-h-screen bg-navy-950 text-white">
       {/* Header */}
